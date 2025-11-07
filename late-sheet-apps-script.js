@@ -1,3 +1,5 @@
+const spreadsheetUrl = "https://docs.google.com/spreadsheets/d/1j_3it9c1WMn9z_1r4qvENPPcd_Sl3jDImR1GLZwN0Lo";
+
 const columns = {
     "name": "Name",
     "date": "Date",
@@ -61,7 +63,11 @@ function processLateSheetNow() {
 }
 
 function processLateSheet(spreadsheet) {
-  const currentYear = "2026"; // new Date().getFullYear().toString();
+  const currentYear = new Date().getFullYear().toString();
+  if (currentYear === "2025") {
+    Logger.log(`Don't start until 2026`);
+    return;
+  }
   const sheet = spreadsheet.getSheetByName(currentYear);
   if (!sheet) {
     Logger.log(`Sheet named "${currentYear}" not found`);
@@ -76,7 +82,7 @@ function processLateSheet(spreadsheet) {
  * @returns {Spreadsheet|null} The spreadsheet or null if not found
  */
 function getSpreadsheetForThisYear() {
-  return SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1qy9wbf1NRbmAkZFKGqXbtGpBRUZTFoLu0Dbhz_WVszo/edit");
+  return SpreadsheetApp.openByUrl(spreadsheetUrl);
 }
 
 /**
