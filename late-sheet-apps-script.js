@@ -1,4 +1,4 @@
-const spreadsheetUrl = "https://docs.google.com/spreadsheets/d/1j_3it9c1WMn9z_1r4qvENPPcd_Sl3jDImR1GLZwN0Lo";
+const spreadsheetUrl = "https://docs.google.com/spreadsheets/d/1j_3it9c1WMn9z_1r4qvENPPcd_Sl3jDImR1GLZwN0Lo/edit";
 
 const columns = {
     "name": "Name",
@@ -315,6 +315,10 @@ function sendLateSheetEmail(data) {
   const name = data.name || 'Member';
   const emailAddress = `${name}@directactioneverywhere.com`;
   const subject = "You've been added to the late sheet.";
+
+  if (email === "joe@directactioneverywhere.com") {
+    email = "ataylor@directactioneverywhere.com";
+  }
   
   // Build email body with details
   let body = `Hello ${name},\n\n`;
