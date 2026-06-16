@@ -63,14 +63,27 @@ function processLateSheetNow() {
 }
 
 function processLateSheet(spreadsheet) {
+  const sheet = getSheetForCurrentYear(spreadsheet);
+  if (!sheet) {
+    return;
+  }
+
+  processSheet(spreadsheet, sheet);
+}
+
+/**
+ * Get the sheet (tab) for the current year
+ * @param {Spreadsheet} spreadsheet - The spreadsheet
+ * @returns {Sheet|null} The sheet or null if not found
+ */
+function getSheetForCurrentYear(spreadsheet) {
   const currentYear = new Date().getFullYear().toString();
   const sheet = spreadsheet.getSheetByName(currentYear);
   if (!sheet) {
     Logger.log(`Sheet named "${currentYear}" not found`);
-    return;
+    return null;
   }
-  
-  processSheet(spreadsheet, sheet);
+  return sheet;
 }
 
 /**
@@ -218,15 +231,21 @@ function isValidName(validation, nameValue, spreadsheet) {
 }
 
 /**
- * Process the sheet and send emails for unprocessed rows
+ * Processes the sheet.
  * @param {Spreadsheet} spreadsheet - The spreadsheet
  * @param {Sheet} sheet - The sheet to process
  */
 function processSheet(spreadsheet, sheet) {
-  if (!sheet) {
-    return;
-  }
-  
+  colorLateCells(sheet);
+  processEmails(spreadsheet, sheet);
+}
+
+/**
+ * Sends emails for unprocessed rows
+ * @param {Spreadsheet} spreadsheet - The spreadsheet
+ * @param {Sheet} sheet - The sheet to process
+ */
+function processEmails(spreadsheet, sheet) {
   // Read column data
   const columnData = readColumnData(sheet);
   if (!columnData) {
@@ -287,6 +306,89 @@ function processSheet(spreadsheet, sheet) {
       Logger.log(`Error processing row ${rowInfo.rowNumber}: ${error.toString()}`);
     }
   });
+}
+
+/**
+ * Background colors keyed by how many times a person was late in the
+ * 30 days leading up to (and including) a given date. The 4th and any
+ * further lates all use the last color.
+ */
+const lateCountColors = {
+  1: "#d9ead3", // light green  - 1st late in last 30 days
+  2: "#fff2cc", // light yellow - 2nd late
+  3: "#fce5cd", // light orange - 3rd late
+  4: "#f4cccc", // light red    - 4th and further lates
+};
+
+/**
+ * Color any date cells that don't yet have a background color, according to
+ * how many times that person was late in the previous 30 days (inclusive of
+ * the entry's own date).
+ * @param {Sheet} sheet - The sheet to process
+ */
+function colorLateCells(sheet) {
+  const columnData = readColumnData(sheet);
+  if (!columnData) {
+    return;
+  }
+
+  const { columnIndices, values } = columnData;
+  const nameIndex = columnIndices.name;
+  const dateIndex = columnIndices.date;
+  const dateColumn = dateIndex + 1; // 1-indexed for getRange
+
+  const numDataRows = values.length - 1; // exclude header row
+  if (numDataRows < 1) {
+    return;
+  }
+
+  // Read existing backgrounds for the date column in one call. A cell with no
+  // fill set reports "#ffffff".
+  const backgrounds = sheet.getRange(2, dateColumn, numDataRows, 1).getBackgrounds();
+
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+  // Pre-parse all rows' name/date once so the inner count loop is cheap.
+  const parsed = values.map(row => {
+    const dateValue = row[dateIndex];
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    return {
+      name: row[nameIndex],
+      date: isNaN(date.getTime()) ? null : date,
+    };
+  });
+
+  for (let i = 1; i < values.length; i++) {
+    const background = backgrounds[i - 1][0];
+    // Skip cells that already have a background color.
+    if (background && background.toLowerCase() !== "#ffffff") {
+      continue;
+    }
+
+    const { name, date } = parsed[i];
+    if (!name || !date) {
+      continue;
+    }
+
+    const windowStart = new Date(date.getTime() - THIRTY_DAYS_MS);
+
+    // Count this person's lates within the 30 days up to and including this date.
+    let lateCount = 0;
+    for (let j = 1; j < parsed.length; j++) {
+      const other = parsed[j];
+      if (other.name !== name || !other.date) {
+        continue;
+      }
+      if (other.date >= windowStart && other.date <= date) {
+        lateCount++;
+      }
+    }
+
+    const color = lateCountColors[Math.min(lateCount, 4)];
+    if (color) {
+      sheet.getRange(i + 1, dateColumn).setBackground(color);
+    }
+  }
 }
 
 /**
