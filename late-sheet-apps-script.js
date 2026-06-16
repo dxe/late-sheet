@@ -411,11 +411,11 @@ function formatDate(dateValue) {
  */
 function sendLateSheetEmail(data) {
   const name = data.name;
-  const emailAddress = `${data.name}@directactioneverywhere.com`;
+  let emailAddress = `${data.name}@directactioneverywhere.com`;
   const subject = "You've been added to the late sheet.";
 
   if (emailAddress === "joe@directactioneverywhere.com") {
-    emailAddress = "ataylor@directactioneverywhere.com";
+    return;
   }
 
   // Build email body with details
