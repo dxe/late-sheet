@@ -308,8 +308,8 @@ function formatDate(dateValue) {
  * @param {Object} data - The row data containing late sheet information
  */
 function sendLateSheetEmail(data) {
-  const name = data.name || 'Member';
-  const emailAddress = `${name}@directactioneverywhere.com`;
+  const name = data.name;
+  const emailAddress = `${data.name}@directactioneverywhere.com`;
   const subject = "You've been added to the late sheet.";
 
   if (email === "joe@directactioneverywhere.com") {
