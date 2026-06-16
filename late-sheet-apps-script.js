@@ -64,10 +64,6 @@ function processLateSheetNow() {
 
 function processLateSheet(spreadsheet) {
   const currentYear = new Date().getFullYear().toString();
-  if (currentYear === "2025") {
-    Logger.log(`Don't start until 2026`);
-    return;
-  }
   const sheet = spreadsheet.getSheetByName(currentYear);
   if (!sheet) {
     Logger.log(`Sheet named "${currentYear}" not found`);
