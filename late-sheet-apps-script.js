@@ -312,10 +312,10 @@ function sendLateSheetEmail(data) {
   const emailAddress = `${data.name}@directactioneverywhere.com`;
   const subject = "You've been added to the late sheet.";
 
-  if (email === "joe@directactioneverywhere.com") {
-    email = "ataylor@directactioneverywhere.com";
+  if (emailAddress === "joe@directactioneverywhere.com") {
+    emailAddress = "ataylor@directactioneverywhere.com";
   }
-  
+
   // Build email body with details
   let body = `Hello ${name},\n\n`;
   body += "You've been added to the late sheet with the following details:\n\n";
