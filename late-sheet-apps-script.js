@@ -485,6 +485,27 @@ function colorLateCells(sheet) {
 
     sheet.getRange(i + 1, dateColumn).setBackground(color);
   }
+
+  // getDataRange() only extends to the last row containing data, so if the most
+  // recent entries were deleted their date cells fall outside `values` and the
+  // loop above never clears their leftover fill. Look ahead up to 10 rows past
+  // the data range and clear any stale backgrounds left behind.
+  const LOOK_AHEAD_ROWS = 10;
+  const firstExtraRow = values.length + 1; // 1-indexed row after the last data row
+  const lastExtraRow = Math.min(firstExtraRow + LOOK_AHEAD_ROWS - 1, sheet.getMaxRows());
+  const numExtraRows = lastExtraRow - firstExtraRow + 1;
+  if (numExtraRows > 0) {
+    const extraBackgrounds = sheet
+      .getRange(firstExtraRow, dateColumn, numExtraRows, 1)
+      .getBackgrounds();
+    for (let k = 0; k < numExtraRows; k++) {
+      const background = extraBackgrounds[k][0];
+      const normalizedBackground = background ? background.toLowerCase() : "#ffffff";
+      if (normalizedBackground !== "#ffffff") {
+        sheet.getRange(firstExtraRow + k, dateColumn).setBackground(null);
+      }
+    }
+  }
 }
 
 /**
