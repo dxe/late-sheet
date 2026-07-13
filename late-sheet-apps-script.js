@@ -434,6 +434,13 @@ function colorLateCells(sheet) {
   for (let i = 1; i < values.length; i++) {
     const { name, date } = parsed[i];
     if (!name || !date) {
+      // Clear any leftover fill: without a name and date the cell has no
+      // late-count color, so a stale background from a previous edit is wrong.
+      const background = backgrounds[i - 1][0];
+      const normalizedBackground = background ? background.toLowerCase() : "#ffffff";
+      if (normalizedBackground !== "#ffffff") {
+        sheet.getRange(i + 1, dateColumn).setBackground(null);
+      }
       continue;
     }
 
