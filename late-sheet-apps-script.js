@@ -440,15 +440,22 @@ function colorLateCells(sheet) {
     const windowStart = new Date(date.getTime() - THIRTY_DAYS_MS);
 
     // Count this person's lates within the 30 days up to and including this date.
+    // For entries sharing this exact timestamp (e.g. multiple lates on the same
+    // day), break ties by row order so each same-day entry counts as a distinct,
+    // incrementing late instead of all landing on the same count/color.
     let lateCount = 0;
     for (let j = 1; j < parsed.length; j++) {
       const other = parsed[j];
       if (other.name !== name || !other.date) {
         continue;
       }
-      if (other.date >= windowStart && other.date <= date) {
-        lateCount++;
+      if (other.date < windowStart || other.date > date) {
+        continue;
       }
+      if (other.date.getTime() === date.getTime() && j > i) {
+        continue;
+      }
+      lateCount++;
     }
 
     // Skip if the cell already has the color we'd set, to avoid unnecessary
