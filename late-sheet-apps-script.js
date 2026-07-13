@@ -62,6 +62,48 @@ function processLateSheetNow() {
   processLateSheet(spreadsheet);
 }
 
+/**
+ * Simple trigger that runs whenever a user edits the spreadsheet. Recolors the
+ * date cells, but only when the edit touched the Name or Date column (elsewhere
+ * the colors can't change).
+ * @param {Object} e - The onEdit event object supplied by Apps Script
+ */
+function onEdit(e) {
+  if (!e || !e.range) {
+    return;
+  }
+
+  const sheet = e.range.getSheet();
+
+  // Only act on the current year's sheet.
+  const currentYear = new Date().getFullYear().toString();
+  if (sheet.getName() !== currentYear) {
+    return;
+  }
+
+  const columnData = readColumnData(sheet);
+  if (!columnData) {
+    return;
+  }
+
+  const nameColumn = columnData.columnIndices.name + 1; // 1-indexed for the range
+  const dateColumn = columnData.columnIndices.date + 1;
+
+  // The edited range can span multiple columns (e.g. a paste), so check whether
+  // it overlaps the Name or Date column at all.
+  const firstCol = e.range.getColumn();
+  const lastCol = e.range.getLastColumn();
+  const touchedNameOrDate =
+    (nameColumn >= firstCol && nameColumn <= lastCol) ||
+    (dateColumn >= firstCol && dateColumn <= lastCol);
+
+  if (!touchedNameOrDate) {
+    return;
+  }
+
+  colorLateCells(sheet);
+}
+
 function processLateSheet(spreadsheet) {
   const sheet = getSheetForCurrentYear(spreadsheet);
   if (!sheet) {
