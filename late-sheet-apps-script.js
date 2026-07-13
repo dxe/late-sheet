@@ -432,12 +432,6 @@ function colorLateCells(sheet) {
   });
 
   for (let i = 1; i < values.length; i++) {
-    const background = backgrounds[i - 1][0];
-    // Skip cells that already have a background color.
-    if (background && background.toLowerCase() !== "#ffffff") {
-      continue;
-    }
-
     const { name, date } = parsed[i];
     if (!name || !date) {
       continue;
@@ -457,10 +451,25 @@ function colorLateCells(sheet) {
       }
     }
 
+    // Skip if the cell already has the color we'd set, to avoid unnecessary
+    // API calls (performance) and cluttering the revision history.
+
+    const background = backgrounds[i - 1][0];
+    const normalizedBackground = background ? background.toLowerCase() : "#ffffff";
+
     const color = lateCountColors[Math.min(lateCount, 4)];
-    if (color) {
-      sheet.getRange(i + 1, dateColumn).setBackground(color);
+    if (!color) {
+      if (normalizedBackground !== "#ffffff") {
+        sheet.getRange(i + 1, dateColumn).setBackground(null);
+      }
+      continue;
     }
+
+    if (normalizedBackground === color) {
+      continue;
+    }
+
+    sheet.getRange(i + 1, dateColumn).setBackground(color);
   }
 }
 
