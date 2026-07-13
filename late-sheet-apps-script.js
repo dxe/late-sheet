@@ -63,9 +63,40 @@ function processLateSheetNow() {
 }
 
 /**
- * Simple trigger that runs whenever a user edits the spreadsheet. Recolors the
- * date cells, but only when the edit touched the Name or Date column (elsewhere
- * the colors can't change).
+ * Installs an onEdit trigger for the spreadsheet. Because this script is
+ * standalone (not container-bound), the simple onEdit(e) trigger never fires;
+ * an installable trigger is required instead. Run this function once, by hand,
+ * from the Apps Script editor. Safe to re-run; does not create duplicates.
+ */
+function installOnEditTrigger() {
+  const spreadsheet = getSpreadsheetForThisYear();
+  if (!spreadsheet) {
+    Logger.log("Could not open spreadsheet; trigger not installed.");
+    return;
+  }
+
+  // Remove existing onEdit triggers pointing at this handler to avoid duplicates.
+  ScriptApp.getProjectTriggers().forEach(trigger => {
+    if (
+      trigger.getHandlerFunction() === "onEdit" &&
+      trigger.getEventType() === ScriptApp.EventType.ON_EDIT
+    ) {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  ScriptApp.newTrigger("onEdit")
+    .forSpreadsheet(spreadsheet)
+    .onEdit()
+    .create();
+
+  Logger.log("Installed onEdit trigger for the late sheet.");
+}
+
+/**
+ * Installable trigger that runs whenever a user edits the spreadsheet. Recolors
+ * the date cells, but only when the edit touched the Name or Date column
+ * (elsewhere the colors can't change). Installed via installOnEditTrigger().
  * @param {Object} e - The onEdit event object supplied by Apps Script
  */
 function onEdit(e) {
