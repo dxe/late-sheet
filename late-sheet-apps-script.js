@@ -456,7 +456,7 @@ function colorLateCells(sheet) {
       if (other.name !== name || !other.date) {
         continue;
       }
-      if (other.date < windowStart || other.date > date) {
+      if (other.date <= windowStart || other.date > date) {
         continue;
       }
       if (other.date.getTime() === date.getTime() && j > i) {
