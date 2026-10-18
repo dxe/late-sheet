@@ -553,6 +553,8 @@ function sendLateSheetEmail(data) {
     body += `Notes: ${data.notes}\n`;
   }
   
+  body += "\nThis is an automatic email. To see who added you to the late sheet, check the sheet's revision history (File > Version history > See version history).\n";
+  body += "\nLate sheet: https://dxe.io/late\n";
   body += "\nBest regards,\nLate Sheet System";
   
   // Send the email
